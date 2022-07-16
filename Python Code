@@ -1,0 +1,231 @@
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+%config InlineBackend.figure_format = 'svg'  #For high quality figures
+import time , sys                            # For time calculation
+from matplotlib import pyplot, cm
+from math import cos, pi 
+import scipy.linalg
+import scipy.sparse
+import scipy.sparse.linalg
+
+
+nx = 128     # Grid size in x-dir
+ny = nx      # Grid size in x-dir
+ν  = 0.001   #viscosity
+x_dim = 1      #x dimension  #length in x-dir
+y_dim = 1      #y dimension  #length in y-dir
+dx = x_dim/nx  # intervals in between
+dy = y_dim/ny
+t = 0.0
+
+#cell centered coordinates
+xx = np.linspace(dx/2.0,x_dim - dx/2.0,nx) 
+yy = np.linspace(dy/2.0,y_dim - dy/2.0,ny)
+xcc, ycc = np.meshgrid(xx,yy)
+
+# x-staggered coordinates
+xxs = np.linspace(0,x_dim,nx+1)       #( note the dimensions of staggered grid 
+xu,yu = np.meshgrid(xxs, yy)          # is different in different directions) 
+
+# y-staggered coordinates
+yys = np.linspace(0,y_dim,ny+1)
+xv,yv = np.meshgrid(xx, yys)
+
+
+#BC's
+u_top = 1.0*cos(2*pi*t/1)    # Oscillatory case with single wall oscillation
+u_bot = 0
+v_left = 0
+v_right =0
+
+#set time step 
+dt = 0.01
+print('dt=', dt)
+
+# initialize velocity
+u = np.zeros([ny+2, nx+2]) # include ghost cells
+v = np.zeros([ny +2, nx+2]) # include ghost cells
+
+#Initialize primed(intermidiate velocity)
+u_star = np.zeros_like(u)
+v_star = np.zeros_like(u)    
+
+# initialize the pressure
+p = np.zeros([nx+2,ny+2]) # Note the dimensions(ghost cells included)
+
+# This cell shows how the matrix can be solved using the special library and functions in numpy called as sparce.linalg
+# Reference of this cells can be found at https://github.com/saadtony/uCFD/blob/master/Navier-Stokes%20FVM%20Staggered%20-%20Driven%20Cavity%20(CHEN6355).ipynbCopyright (c) 2019 Tony Saad
+
+A_p=np.zeros([ny+2,nx+2])               #Dimensions with ghost cells
+A_e = 1.0/dx/dx*np.ones([ny,nx])
+A_s = 1.0/dy/dy*np.ones([ny,nx])
+A_n = 1.0/dy/dy*np.ones([ny,nx])
+A_w = 1.0/dx/dx*np.ones([ny,nx])
+# set left wall coefs
+A_w[1:-1,1] = 0.0
+# set right wall coefs
+A_e[1:-1,-2] = 0.0
+# set top wall coefs
+A_n[-2,1:-1] = 0.0
+# set bottom wall coefs
+A_s[1,1:-1] = 0.0
+A_p = -(A_w + A_e + A_n + A_s)
+
+
+
+# the pressure solver is shown below
+def pressure_solver(p, b, dx, dy):        #same as from 4th semester course of CFD. Here 
+    pn = np.empty([nx+2,ny+2])
+    nit = 0
+    error = 10
+    tolerance = 1e-8
+    ω = 1.1
+    while error > tolerance :                     
+        pn = p.copy()    
+        for i in range(1,nx+1):
+            for j in range(1,ny+1):
+                a_p = Ap[j,i]
+                a_n = An[j,i]
+                a_so = As[j,i]
+                a_e = Ae[j,i]
+                a_w = Aw[j,i]
+                rhs = b[j,i] - 1.0*(a_e*p[j,i+1] + a_w*p[j,i-1] 
+                                    + a_n*p[j+1,i] + a_so*p[j-1,i])
+                p[j,i] = ω*rhs/ap + (1-ω)*p[j,i]
+        error = np.linalg.norm(p - pn)    # Again to find the difference in velocity is found using linalg.norm
+        nit += 1
+    #print(nit)    
+    return p
+
+#print('Poisson Error:', error)
+#This sparce solver library package is used from [https://github.com/saadtony/uCFD/blob/master/Navier-Stokes%20FVM%20Staggered%20-%20Driven%20Cavity%20(CHEN6355).ipynb]
+# The use of sparce solver takes the fraction of time that of direct solver (direct solver is written in Matlab and attached in another appendix) )
+
+n = nx*ny
+
+# Reshaping is done 
+
+d0 = A_p.reshape(n)
+de = A_e.reshape(n)[:-1]
+dw = A_w.reshape(n)[1:]
+ds = A_s.reshape(n)[nx:]
+dn = A_n.reshape(n)[:-nx]
+
+A1 = scipy.sparse.diags([d0, de, dw, dn, ds], [0, 1, -1, nx, -nx], format='csr')
+plt.matshow((A1.toarray()))
+
+%%timeit   #for time calculation
+
+# while t < tend:
+
+t=0
+nsteps = 600 # Here the number of timesteps are given to see the simulation upto certain time and see patterns
+             # of velocity 
+
+for n in range(0,nsteps):     # Boundary conditions are required to be inside for loop
+    u_top = 1.0*cos(2*pi*t/3) # cosine function is used for periodic oscillations 
+    #u_bottom = 1.0*cos(2*pi*t/3)
+    
+    # left wall
+    u[1:-1,1] = 0.0
+    # right wall
+    u[1:-1,-1] = 0.0
+    # top wall
+    u[-1,1:] = 2.0*u_top - u[-2,1:]
+    # bottom wall
+    u[0,1:] = 2.0*u_bot - u[1,1:]
+
+    # left wall
+    v[1:,0] = 2.0*v_left - v[1:,1]
+    # right wall
+    v[1:,-1] = 2.0*v_right - v[1:,-2]
+    # bottom wall
+    v[1,1:-1] = 0.0
+    # top wall
+    v[-1,1:-1] = 0.0    
+  
+
+    # x-momentum convective and diffusive fluxes
+    tic = time.time() # for time calculation
+    for i in range(2,nx+1):
+        for j in range(1,ny+1):
+            ue = 0.5*(u[j,i+1] + u[j,i])
+            uw = 0.5*(u[j,i]   + u[j,i-1])    
+            
+            un = 0.5*(u[j+1,i] + u[j,i])
+            us = 0.5*(u[j,i] + u[j-1,i])            
+            
+            vn = 0.5*(v[j+1,i] + v[j+1,i-1])
+            vs = 0.5*(v[j,i] + v[j,i-1])
+            
+            # convection calculated at each interval, no need to make aaray since it is being updated 
+            advection_x = - (ue*ue - uw*uw)/dx - (un*vn - us*vs)/dy
+            
+            # diffusion 
+            diffusion_x = ν*( (u[j,i+1] - 2.0*u[j,i] + u[j,i-1])/dx/dx + (u[j+1,i] - 2.0*u[j,i] + u[j-1,i])/dy/dy )
+            
+            u_star[j,i] = u[j,i] + dt *(advection_x + diffusion_x)
+                
+    # do y-momentum - only need to do interior points
+    for i in range(1,nx+1):
+        for j in range(2,ny+1):
+            ve = 0.5*(v[j,i+1] + v[j,i])
+            vw = 0.5*(v[j,i] + v[j,i-1])    
+            
+            ue = 0.5*(u[j,i+1] + u[j-1,i+1])
+            uw = 0.5*(u[j,i] + u[j-1,i])
+            
+            vn = 0.5*(v[j+1,i] + v[j,i])
+            vs = 0.5*(v[j,i] + v[j-1,i])            
+
+            # convection 
+            advection_y = - (ue*ve - uw*vw)/dx - (vn*vn - vs*vs)/dy
+            
+            # diffusion
+            diffusion_y = ν*( (v[j,i+1] - 2.0*v[j,i] + v[j,i-1])/dx/dx + (v[j+1,i] - 2.0*v[j,i] + v[j-1,i])/dy/dy )
+            
+            v_prime[j,i] = v[j,i] + dt*(advection_y + diffusion_y)            
+    
+    
+#    # for direct solver (Check dimensions)
+#    # This takes large time 
+#     prhs = 1.0/dt * divu_star
+#     pressure_solver(p, prhs, dx, dy)
+#     u[1:-1,2:-1] = u_star[1:-1,2:-1] - dt * (p[1:-1,2:-1] - p[1:-1,1:-2])/dx
+#     v[2:-1,1:-1] = v_star[2:-1,1:-1] - dt * (p[2:-1,1:-1] - p[1:-2,1:-1])/dy       
+    
+    
+    # For using sparce solver
+    divu_star = np.zeros([ny+2,nx+2]) 
+
+    divu_star[1:-1,1:-1] = (u_star[1:-1,2:] - u_star[1:-1,1:-1])/dx + (v_star[2:,1:-1] - v_star[1:-1,1:-1])/dy
+
+    prhs = 1.0/dt * divu_star
+
+    p_new,info = scipy.sparse.linalg.bicg(A1,prhs[1:-1,1:-1].ravel(),tol=1e-10) 
+    
+    #Corrected pressure 
+    p = np.zeros([ny+2,nx+2])
+    p[1:-1,1:-1] = p_new.reshape([ny,nx])
+
+    # time advance with updated(actual) velocity
+    u[1:-1,2:-1] = u_star[1:-1,2:-1] - dt * (p[1:-1,2:-1] - p[1:-1,1:-2])/dx
+    v[2:-1,1:-1] = v_star[2:-1,1:-1] - dt * (p[2:-1,1:-1] - p[1:-2,1:-1])/dy       
+    #print(t, "        ", U_top) # To see oscillating change
+    t += dt
+
+
+fig = plt.figure(figsize=[6,6],dpi=600)
+ucc = 0.5*(u[1:-1,2:] + u[1:-1,1:-1]) #cc = cell centered
+vcc = 0.5*(v[2:,1:-1] + v[1:-1,1:-1]) #cc = cell centered
+speed = np.sqrt(ucc*ucc + vcc*vcc)    #While plotting validation plots no use of "speed", use u and v only
+
+x = np.linspace(0, x_dim,nx)
+y = np.linspace(0,y_dim,ny)
+xx,yy = np.meshgrid(x,y)
+
+fig = plt.figure(figsize=[6,6],dpi=600)
+#plt.quiver(xx[::2,::2],yy[::2,::2],ucc[::2,::2],vcc[::2,::]) # to get direction of velocities
+
+plt.streamplot(xx,yy,ucc, vcc, color=np.sqrt(ucc*ucc + vcc*vcc),density=1.5,cmap=cm.viridis,linewidth=1.)
