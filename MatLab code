@@ -1,0 +1,129 @@
+% This code was written as part of CFD course in both Python and matlab(Thanks to Shubham who found out the bug in MatLab code)
+% Matlab code is shown below
+% Theory for this direct solver can be seen in the CFD notes
+% Here NS equations in non-dimensional form are simulated
+
+%Define variables 
+x_dim = 1;
+y_dim = 1;
+Re = 1000; 
+m = 11;
+n = 11;
+dt = 10^-3;
+tol_p = 10^-7;
+tol_v = 10^-7;
+
+%Initialize the arrays
+dx = x_dim/(m-1);
+dy = y_dim/(n-1);
+u_old = zeros(m,n+1);
+v_old = zeros(m+1,n);
+Pn = zeros(m+1,n+1);
+Q = zeros(m+1,n+1); 
+F = zeros(m,n);
+G = zeros(m,n);
+t = 0;
+tic  % for time calcilation
+% this t shows the characteristics time
+while (t<0.01)
+    t = t + dt;
+    for j = 2:n-1   %left and right boundaries
+        u_old(1,j) = 0;    u_old(m,j) = 0;
+        v_old(1,j) = -v_old(2,j); v_old(m+1,j) = -v_old(m,j);
+    end
+    u_old(1,n) = 0;    u_old(m,n) = 0;
+    for i = 2:m-1   %top and bottom boundaries
+        u_old(i,1) = -u_old(i,2); u_old(i,n+1) = 2 - u_old(i,n);
+        v_old(i,1) = 0;    v_old(i,n) = 0;
+    end
+    v_old(m,1) = 0;    v_old(m,n) = 0;
+    for i = 2:m-1
+        for j = 2:n
+            u_e = (u_old(i,j)+u_old(i+1,j))/2;
+            u_w = (u_old(i,j)+u_old(i-1,j))/2;
+            u_n = (u_old(i,j)+u_old(i,j+1))/2;
+            u_s = (u_old(i,j)+u_old(i,j-1))/2;
+            v_n = (v_old(i,j)+v_old(i+1,j))/2;
+            v_s = (v_old(i,j-1)+v_old(i+1,j-1))/2;
+            dudx = (u_old(i+1,j)-2*u_old(i,j)+u_old(i-1,j))/dx^2;
+            dudy = (u_old(i,j+1)-2*u_old(i,j)+u_old(i,j-1))/dy^2;
+            F(i,j) = -(u_e^2-u_w^2)/dx - (u_n*v_n-u_s*v_s)/dy + (dudx+dudy)/Re;
+        end
+    end
+    for i = 2:m
+        for j = 2:n-1
+            u_e = (u_old(i,j)+u_old(i,j+1))/2;
+            u_w = (u_old(i-1,j)+u_old(i-1,j+1))/2;
+            ve = (v_old(i,j)+v_old(i+1,j))/2;
+            vw = (v_old(i,j)+v_old(i-1,j))/2;
+            v_n = (v_old(i,j)+v_old(i,j+1))/2;
+            v_s = (v_old(i,j)+v_old(i,j-1))/2;
+            dvdx = (v_old(i+1,j)-2*v_old(i,j)+v_old(i-1,j))/dx^2;
+            dvdy = (v_old(i,j+1)-2*v_old(i,j)+v_old(i,j-1))/dy^2;
+            G(i,j) = -(u_e*ve-u_w*vw)/dx - (v_n^2-v_s^2)/dy + (dvdx+dvdy)/Re;
+        end
+    end
+    for i = 2:m
+        for j = 2:n
+            Q(i,j) = -(F(i,j)-F(i-1,j))*dt/dx -(G(i,j)-G(i,j-1))*dt/dy;
+        end
+    end
+    %Succesive Over Relaxation Solver for velocity and pressure both
+    %Velocity and pressure are both made to converge
+    w = 1.5; % omega values close to 2 works better
+    itr_p = 0;
+    while itr_p==0
+        P_old = Pn;
+        itr_p = itr_p + 1;
+        fprintf('%i\n',itr_p)
+        for i = 2:m
+            for j = 2:n
+                aw = -dt/dx^2; ae = -dt/dx^2;
+                an = -dt/dy^2; as = -dt/dy^2;
+                if i == 2
+                    aw = 0;
+                end
+                if i == m
+                    ae = 0;
+                end
+                if j == 2
+                    as = 0;
+                end
+                if j == n
+                    an = 0;
+                end
+                ap = -(aw + ae + an + as);
+                Pn(i,j) = w*(Q(i,j)-aw*Pn(i-1,j)-ae*Pn(i+1,j)-as*Pn(i,j-1)-an*Pn(i,j+1))/ap + (1-w)*P_old(i,j);
+            end
+        end
+        resp = max(max(abs(Pn - P_old))); % Here difference between current and previous values is taken
+        if resp < tol_p
+            break;
+        end
+    end
+    P_old = Pn;
+    % Now velocities for converged pressure is calculated
+    ut = u_old;
+    vt = v_old;
+    for i = 2:m-1
+        for j = 2:n
+            ut(i,j) = u_old(i,j) + dt*F(i,j) - (P_old(i+1,j)-P_old(i,j))*dt/dx;
+        end
+    end
+    for i = 2:m
+        for j = 2:n-1
+            vt(i,j) = v_old(i,j) + dt*G(i,j) - (P_old(i,j+1)-P_old(i,j))*dt/dy;
+        end
+    end
+    
+    resv = max(max(max(abs(u_old-ut))),max(max(abs(v_old-vt))));
+    
+    hold on;
+    if resv < tol_v
+        break;
+    end
+    u_old = ut;
+    v_old = vt;
+end
+toc
+%post-processing and result analysis/plotting is not given here.
