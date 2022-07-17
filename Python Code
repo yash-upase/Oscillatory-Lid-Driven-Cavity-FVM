@@ -231,6 +231,8 @@ fig = plt.figure(figsize=[6,6],dpi=600)
 
 plt.streamplot(xx,yy,ucc, vcc, color=np.sqrt(ucc*ucc + vcc*vcc),density=1.5,cmap=cm.viridis,linewidth=1.)
 
+############ This code utilizes too many for-loops, avoidance of which will lead to better performance of the code. Kindly note this. ############
+
 MIT License
 
 Copyright (c) 2019 Tony Saad
