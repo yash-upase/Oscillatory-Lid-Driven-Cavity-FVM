@@ -20,3 +20,22 @@ The first top left figure shows velocity stramlines, the second on top right sho
 <img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/128_128_1000Re.png" width="500" height="500">
 
 The above figure shows the velocity streamline for fully developed flow for Re = 1000. If we increase the Re, then we can observe the secondary vortices developing as well.  
+
+## Single Wall Oscillations
+
+Following are the plots for Single Wall Oscillations with : $\omega = 2\pi/6$
+
+<img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Velocity_u_y_at_Re%3D1000_single.png" width="500" height="500"><img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Velocity_x_v_at_Re%3D1000_single.png" width="500" height="500">
+<img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/osci_1_omega_2_pi_by_6_single120.png" width="500" height="500"><img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Vorticity_at_Re%3D1000_single_120.png" width="500" height="500">
+
+## Double Wall Parallel Oscillations
+Following are the plots for Double Wall Parallel Oscillations with : $\omega = 2\pi/6$
+
+<img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Velocity_u_y_at_Re%3D1000_parallel.png" width="500" height="500"><img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Velocity_x_v_at_Re%3D1000_parallel.png" width="500" height="500">
+<img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/osci_1_omega_2_pi_by_6_parallel120%20.png" width="500" height="500"><img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Vorticity_at_Re%3D1000_parallel_120.png" width="500" height="500">
+
+## Double Wall Anti-Parallel Oscillations
+Following are the plots for Double Wall Anti-Parallel Oscillations with : $\omega = 2\pi/6$
+
+<img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Velocity_u_y_at_Re%3D1000_Anti.png" width="500" height="500"><img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Velocity_x_v_at_Re%3D1000_Anti.png" width="500" height="500">
+<img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/osci_1_omega_2_pi_by_6_anti120.png" width="500" height="500"><img src="https://github.com/here-is-yash/Oscillatory-Lid-Driven-Cavity-FVM/blob/main/Result%20Plots/Vorticity_at_Re%3D1000_Anti_120.png" width="500" height="500">
