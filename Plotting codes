@@ -1,4 +1,5 @@
-## The results for different time steps were saved as .txt files and these files were used for plotting the divergence, vorticity, grid independance study, centerline velocity plots.
+## The results for different time steps were saved as .txt files and these files were used for plotting the divergence,
+#         vorticity, grid independance study, centerline velocity plots.
 
 ############### For U_vel vs y graph################
 
