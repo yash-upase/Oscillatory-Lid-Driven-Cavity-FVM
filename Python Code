@@ -34,8 +34,9 @@ xv,yv = np.meshgrid(xx, yys)
 
 
 #BC's
+# HERE omega is set and varied
 u_top = 1.0*cos(2*pi*t/1)    # Oscillatory case with single wall oscillation
-u_bot = 0
+u_bot = 0                    # u_top = 1.0*cos(2*pi*t/1) FOR PARALLEL or ANTIPARALLEL WALL OSCILLATION
 v_left = 0
 v_right =0
 
