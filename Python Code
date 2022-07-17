@@ -213,7 +213,7 @@ for n in range(0,nsteps):     # Boundary conditions are required to be inside fo
     # time advance with updated(actual) velocity
     u[1:-1,2:-1] = u_star[1:-1,2:-1] - dt * (p[1:-1,2:-1] - p[1:-1,1:-2])/dx
     v[2:-1,1:-1] = v_star[2:-1,1:-1] - dt * (p[2:-1,1:-1] - p[1:-2,1:-1])/dy       
-    #print(t, "        ", U_top) # To see oscillating change
+    #print(t, "        ", U_top, "       ", U_bot) # To see oscillating change
     t += dt
 
 
