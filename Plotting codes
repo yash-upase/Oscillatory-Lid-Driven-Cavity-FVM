@@ -1,0 +1,151 @@
+## The results for different time steps were saved as .txt files and these files were used for plotting the divergence, vorticity, grid independance study, centerline velocity plots.
+
+############### For U_vel vs y graph################
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+nx = 128   #number of intervals in x direction
+ny = nx      #number of intervals in y direction
+ν  = 0.001  #viscosity
+x_dim = 1      #x dimension  #lx
+y_dim = 1      #y dimension  #ly
+dx = x_dim/nx  # intervals and not nodes
+dy = y_dim/ny
+
+
+u1=np.loadtxt("u120.txt")
+u2=np.loadtxt("u180.txt")
+u3=np.loadtxt("u210.txt")
+u4=np.loadtxt("u240.txt")
+u5=np.loadtxt("u270.txt")
+u6=np.loadtxt("u300.txt")
+
+
+fig = plt.figure(figsize=[6,6],dpi=600)
+y = np.linspace(0,y_dim, nx+2)#, endpoint=True)
+
+plt.plot(u1[:,64],y, label ='t=1.2')
+plt.plot(u2[:,64],y, label ='t=1.8')
+plt.plot(u3[:,64],y, label ='t=2.1')
+plt.plot(u4[:,64],y, label ='t=2.4')
+plt.plot(u5[:,64],y, label ='t=2.7')
+plt.plot(u6[:,64],y, label ='t=3.0')
+
+plt.legend(loc='center left')
+plt.title("Re=1000")
+plt.xlabel("u[0.5,0.5]")
+plt.ylabel("y")
+plt.savefig("Velocity_u_y_at_Re=1000_single.png")
+plt.show()
+
+
+############### For x vs V_vel graphh ################
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+nx = 128   #number of intervals in x direction
+ny = nx      #number of intervals in y direction
+ν  = 0.001  #viscosity
+x_dim = 1      #x dimension  #lx
+y_dim = 1      #y dimension  #ly
+dx = x_dim/nx  # intervals and not nodes
+dy = y_dim/ny
+
+
+v1=np.loadtxt("v120.txt")
+v2=np.loadtxt("v180.txt")
+v3=np.loadtxt("v210.txt")
+v4=np.loadtxt("v240.txt")
+v5=np.loadtxt("v270.txt")
+v6=np.loadtxt("v300.txt")
+
+fig = plt.figure(figsize=[6,6],dpi=600)
+x = np.linspace(0,y_dim, nx+2)#, endpoint=True)
+
+plt.plot(x,v1[64,:], label ='t=1.2')
+plt.plot(x,v2[64,:], label ='t=1.8')
+plt.plot(x,v3[64,:], label ='t=2.1')
+plt.plot(x,v4[64,:], label ='t=2.4')
+plt.plot(x,v5[64,:], label ='t=2.7')
+plt.plot(x,v6[64,:], label ='t=3.0')
+
+plt.legend(loc='upper center')
+plt.title("Re=1000")
+plt.ylabel("v[0.5,0.5]")
+plt.xlabel("x")
+plt.savefig("Velocity_x_v_at_Re=1000_single.png")
+plt.show()
+
+
+########## Vorticity Plots #############
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+
+nx = 128   #number of intervals in x direction
+ny = nx      #number of intervals in y direction
+ν  = 0.001  #viscosity
+x_dim = 1      #x dimension  #lx
+y_dim = 1      #y dimension  #ly
+dx = x_dim/nx  # intervals and not nodes
+dy = y_dim/ny
+
+y = np.linspace(0,y_dim, nx)
+x = np.linspace(0,x_dim, nx)
+
+u=np.loadtxt("u120.txt")
+v=np.loadtxt("v120.txt")
+curlu=((v[1:-1,2:]-v[1:-1,1:-1])/dx - (u[2:,1:-1] - u[1:-1,1:-1])/dy)
+levels=np.arange(-90,30,1)
+
+fig = plt.figure(figsize=[6,6],dpi=600)
+
+
+plt.contour(x,y,curlu, levels=levels, cmap=cm.viridis, linewidths=1.)
+
+
+
+plt.title("Vorticity at Re=1000 at t=1.2 ")
+plt.savefig("Vorticity_at_Re=1000_single_120.png")
+plt.show()
+
+
+############# Divergence Plots (mass conservation) ################
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+
+nx = 128   #number of intervals in x direction
+ny = nx      #number of intervals in y direction
+ν  = 0.001  #viscosity
+x_dim = 1      #x dimension  #lx
+y_dim = 1      #y dimension  #ly
+dx = x_dim/nx  # intervals and not nodes
+dy = y_dim/ny
+
+y = np.linspace(0,y_dim, nx)
+x = np.linspace(0,x_dim, nx)
+
+u=np.loadtxt("u120.txt")
+v=np.loadtxt("v120.txt")
+divu = (u[1:-1,2:] - u[1:-1,1:-1])/dx + (v[2:,1:-1] - v[1:-1,1:-1])/dy
+plt.imshow(divu)
+plt.colorbar()
+
+fig = plt.figure(figsize=[6,6],dpi=600)
+
+plt.contour(x,y,curlu, levels=levels, cmap=cm.viridis, linewidths=1.)
+
+
+
+plt.title("Vorticity at Re=1000 at t=1.2 ")
+plt.savefig("Vorticity_at_Re=1000_single_120.png")
+plt.show()
+
+## Similarly centerline velocity codes can also be written
