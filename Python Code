@@ -234,7 +234,7 @@ plt.streamplot(xx,yy,ucc, vcc, color=np.sqrt(ucc*ucc + vcc*vcc),density=1.5,cmap
 MIT License
 
 Copyright (c) 2019 Tony Saad
-Modified work Copyright (c) 2022 yash-upase
+Modified work Copyright (c) 2022 Yash U.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
